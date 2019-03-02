@@ -1,0 +1,206 @@
+use crate::errors::{ErrorKind, PixelMatchError};
+use image::DynamicImage;
+use image::GenericImageView;
+use image::ImageBuffer;
+use image::Rgba;
+
+fn blend(c: u8, a: f64) -> u8 {
+    (255. + (f64::from(i32::from(c) - 255) * a)) as u8
+}
+
+fn rgb2y(r: u8, g: u8, b: u8) -> f64 {
+    f64::from(r) * 0.298_895_31 + f64::from(g) * 0.586_622_47 + f64::from(b) * 0.114_482_23
+}
+
+fn rgb2i(r: u8, g: u8, b: u8) -> f64 {
+    f64::from(r) * 0.595_977_99 - f64::from(g) * 0.274_176_10 - f64::from(b) * 0.321_801_89
+}
+
+fn rgb2q(r: u8, g: u8, b: u8) -> f64 {
+    f64::from(r) * 0.211_470_17 - f64::from(g) * 0.522_617_11 + f64::from(b) * 0.311_146_94
+}
+
+fn color_delta(pixel1: Rgba<u8>, pixel2: Rgba<u8>, y_only: bool) -> f64 {
+    let mut r1 = pixel1.data[0];
+    let mut g1 = pixel1.data[1];
+    let mut b1 = pixel1.data[2];
+    let a1 = pixel1.data[3];
+
+    let mut r2 = pixel2.data[0];
+    let mut g2 = pixel2.data[1];
+    let mut b2 = pixel2.data[2];
+    let a2 = pixel2.data[3];
+
+    if r1 == r2 && g1 == g2 && b1 == b2 && a1 == a2 {
+        return 0.;
+    }
+
+    if a1 < 255 {
+        let a1 = f64::from(a1) / 255.; // alpha 0 ~ 1
+        r1 = blend(r1, a1);
+        g1 = blend(g1, a1);
+        b1 = blend(b1, a1);
+    }
+
+    if a2 < 255 {
+        let a2 = f64::from(a2) / 255.; // alpha 0 ~ 1
+        r2 = blend(r2, a2);
+        g2 = blend(g2, a2);
+        b2 = blend(b2, a2);
+    }
+
+    let y = rgb2y(r1, g1, b1) - rgb2y(r2, g2, b2);
+
+    if y_only {
+        return y;
+    }
+    let i = rgb2i(r1, g1, b1) - rgb2i(r2, g2, b2);
+    let q = rgb2q(r1, g1, b1) - rgb2q(r2, g2, b2);
+
+    0.5053 * y * y + 0.299 * i * i + 0.1957 * q * q
+}
+
+fn is_antialiased(
+    img1: &ImageBuffer<Rgba<u8>, Vec<u8>>,
+    img2: &ImageBuffer<Rgba<u8>, Vec<u8>>,
+    x: u32,
+    y: u32,
+) -> bool {
+    let (_, _, iw, ih) = img1.bounds();
+    if x == 0 || x == iw - 1 || y == 0 || y == ih - 1 {
+        // when on the edge
+        return false;
+    }
+
+    let mut zeroes: u32 = 0;
+    let mut min: f64 = 0.;
+    let mut max: f64 = 0.;
+    let mut min_x: u32 = 0;
+    let mut min_y: u32 = 0;
+    let mut max_x: u32 = 0;
+    let mut max_y: u32 = 0;
+
+    for dx in -1i32..=1 {
+        for dy in -1i32..=1 {
+            if dx == 0 && dy == 0 {
+                // current pixel is origin
+                continue;
+            }
+
+            let nx = (x as i32 + dx) as u32;
+            let ny = (y as i32 + dy) as u32;
+
+            let delta = color_delta(
+                *img1.get_pixel(x, y),
+                *img2.get_pixel((x as i32 + dx) as u32, (y as i32 + dy) as u32),
+                true,
+            );
+            if delta == 0. {
+                zeroes += 1;
+                if zeroes > 2 {
+                    return false;
+                }
+            } else if delta < min {
+                min = delta;
+                min_x = nx;
+                min_y = ny;
+            } else if delta > max {
+                max = delta;
+                max_x = nx;
+                max_y = ny;
+            }
+        }
+    }
+
+    if max == 0. || min == 0. {
+        return false;
+    }
+    has_many_siblings(img1, min_x, min_y)
+        && has_many_siblings(img2, min_x, min_y)
+        && has_many_siblings(img1, max_x, max_y)
+        && has_many_siblings(img2, max_x, max_y)
+}
+
+fn has_many_siblings(img: &ImageBuffer<Rgba<u8>, Vec<u8>>, x: u32, y: u32) -> bool {
+    let (_, _, iw, ih) = img.bounds();
+    if x == 0 || x == iw - 1 || y == 0 || y == ih - 1 {
+        // when on the edge
+        return false;
+    }
+
+    let [r, g, b, a] = img.get_pixel(x, y).data;
+    let mut zeroes: u32 = 0;
+    for dx in -1i32..=1 {
+        for dy in -1i32..=1 {
+            if dx == 0 && dy == 0 {
+                // current pixel is origin
+                continue;
+            }
+            let [nr, ng, nb, na] = img
+                .get_pixel((x as i32 + dx) as u32, (y as i32 + dy) as u32)
+                .data;
+            if r == nr && g == ng && b == nb && a == na {
+                zeroes += 1;
+            }
+            if zeroes > 2 {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn draw_pixel(out: &mut ImageBuffer<Rgba<u8>, Vec<u8>>, x: u32, y: u32, r: u8, g: u8, b: u8) {
+    out.put_pixel(
+        x,
+        y,
+        Rgba {
+            data: [r, g, b, 255],
+        },
+    )
+}
+
+fn gray_pixel(pixel: Rgba<u8>, alpha: f64) -> u8 {
+    blend(
+        rgb2y(pixel.data[0], pixel.data[1], pixel.data[2]) as u8,
+        alpha * f64::from(pixel.data[3]) / 255.,
+    )
+}
+
+pub fn match_pixel(
+    img1: &DynamicImage,
+    img2: &DynamicImage,
+    out: &mut ImageBuffer<Rgba<u8>, Vec<u8>>,
+    threshold: f64,
+    include_aa: bool,
+) -> Result<u32, PixelMatchError> {
+    if img1.dimensions() != img2.dimensions() {
+        return Err(PixelMatchError::from(ErrorKind::SizeUnmatch));
+    }
+
+    let max_delta = 35215. * threshold * threshold;
+    let mut diff: u32 = 0;
+
+    let img1 = img1.to_rgba();
+    let img2 = img2.to_rgba();
+
+    for (x, y, pixel1) in img1.enumerate_pixels() {
+        let delta = color_delta(*pixel1, *img2.get_pixel(x, y), false);
+
+        if delta > max_delta {
+            if !include_aa
+                && is_antialiased(&img1, &img2, x, y)
+                && is_antialiased(&img2, &img1, x, y)
+            {
+                draw_pixel(out, x, y, 255, 255, 0);
+            } else {
+                draw_pixel(out, x, y, 255, 0, 0);
+                diff += 1;
+            }
+        } else {
+            let val = gray_pixel(*pixel1, 0.1);
+            draw_pixel(out, x, y, val, val, val)
+        }
+    }
+    Ok(diff)
+}
