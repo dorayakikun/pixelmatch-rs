@@ -40,19 +40,19 @@ fn color_delta(pixel1: Rgba<u8>, pixel2: Rgba<u8>, y_only: bool) -> f64 {
         r1 = blend(r1, a1);
         g1 = blend(g1, a1);
         b1 = blend(b1, a1);
-    };
+    }
     if a2 < 255 {
         let a2 = f64::from(a2) / 255.; // alpha 0 ~ 1
         r2 = blend(r2, a2);
         g2 = blend(g2, a2);
         b2 = blend(b2, a2);
-    };
+    }
 
     let y = rgb2y(r1, g1, b1) - rgb2y(r2, g2, b2);
 
     if y_only {
         return y;
-    };
+    }
     let i = rgb2i(r1, g1, b1) - rgb2i(r2, g2, b2);
     let q = rgb2q(r1, g1, b1) - rgb2q(r2, g2, b2);
 
@@ -69,7 +69,7 @@ fn is_antialiased(
     if x == 0 || x == iw - 1 || y == 0 || y == ih - 1 {
         // when on the edge
         return false;
-    };
+    }
 
     let mut zeroes: u32 = 0;
     let mut min: f64 = 0.;
@@ -85,7 +85,7 @@ fn is_antialiased(
             if dx == 0 && dy == 0 {
                 // current pixel is origin
                 continue;
-            };
+            }
 
             let nx = x as i32 + dx;
             let ny = y as i32 + dy;
@@ -94,8 +94,8 @@ fn is_antialiased(
             if delta == 0. {
                 zeroes += 1;
                 if zeroes > 2 {
-                    break;
-                };
+                    return true;
+                }
             } else if delta < min {
                 min = delta;
                 min_x = nx;
@@ -104,15 +104,12 @@ fn is_antialiased(
                 max = delta;
                 max_x = nx;
                 max_y = ny;
-            };
+            }
         }
     }
-    if zeroes > 2 {
-        return false;
-    };
     if max == 0. || min == 0. {
         return false;
-    };
+    }
     (has_many_siblings(img1, min_x as u32, min_y as u32)
         && has_many_siblings(img2, min_x as u32, min_y as u32))
         || (has_many_siblings(img1, max_x as u32, max_y as u32)
@@ -124,7 +121,7 @@ fn has_many_siblings(img: &ImageBuffer<Rgba<u8>, Vec<u8>>, x: u32, y: u32) -> bo
     if x == 0 || x == iw - 1 || y == 0 || y == ih - 1 {
         // when on the edge
         return false;
-    };
+    }
 
     let [r, g, b, a] = img.get_pixel(x, y).data;
     let mut zeroes: u32 = 0;
@@ -133,7 +130,7 @@ fn has_many_siblings(img: &ImageBuffer<Rgba<u8>, Vec<u8>>, x: u32, y: u32) -> bo
             if dx == 0 && dy == 0 {
                 // current pixel is origin
                 continue;
-            };
+            }
             let nx = x as i32 + dx;
             let ny = y as i32 + dy;
             let [nr, ng, nb, na] = img.get_pixel(nx as u32, ny as u32).data;
@@ -141,8 +138,8 @@ fn has_many_siblings(img: &ImageBuffer<Rgba<u8>, Vec<u8>>, x: u32, y: u32) -> bo
                 zeroes += 1;
                 if zeroes > 2 {
                     break;
-                };
-            };
+                }
+            }
         }
     }
     zeroes > 2
@@ -192,11 +189,11 @@ pub fn match_pixel(
             } else {
                 draw_pixel(out, x, y, 255, 0, 0);
                 diff += 1;
-            };
+            }
         } else {
             let val = gray_pixel(*pixel1, 0.1);
             draw_pixel(out, x, y, val, val, val)
-        };
+        }
     }
     Ok(diff)
 }

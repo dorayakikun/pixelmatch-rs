@@ -57,8 +57,8 @@ fn run() -> Result<()> {
             _ => {
                 out.save(dest)?;
             }
-        };
-    };
+        }
+    }
     Ok(())
 }
 
@@ -83,7 +83,7 @@ fn main() {
             ErrorKind::SizeUnmatch => {
                 std::process::exit(2);
             }
-        };
-    };
+        }
+    }
     std::process::exit(0);
 }
