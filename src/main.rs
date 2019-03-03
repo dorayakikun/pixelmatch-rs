@@ -57,8 +57,8 @@ fn run() -> Result<()> {
             _ => {
                 out.save(dest)?;
             }
-        }
-    }
+        };
+    };
     Ok(())
 }
 
