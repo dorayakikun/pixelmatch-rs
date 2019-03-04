@@ -14,8 +14,6 @@ jobs:
           rust_toolchain: stable
         beta:
           rust_toolchain: beta
-        nightly:
-          rust_toolchain: nightly
 
     steps:
       - script: |
