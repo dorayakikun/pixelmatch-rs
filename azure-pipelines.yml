@@ -1,19 +1,35 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+# 使用するコンテナを列挙する
+resources:
+  containers:
+    - container: rust
+      image: rust:latest
 
-trigger:
-- master
+jobs:
+  - job: Linux
+    pool:
+      vmImage: 'ubuntu-16.04'
+    strategy:
+      matrix:
+        stable:
+          rust_toolchain: stable
+        beta:
+          rust_toolchain: beta
+        nightly:
+          rust_toolchain: nightly
 
-pool:
-  vmImage: 'Ubuntu-16.04'
+    steps:
+      - script: |
+          curl -sSf https://sh.rustup.rs | sh -s -- --default-toolchain $RUST_TOOLCHAIN -y
+          echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
+          $HOME/.cargo/bin/rustup component add rustfmt
+          $HOME/.cargo/bin/rustup component add clippy
+        displayName: Install rustup
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+      - script: cargo fmt --all -- --check
+        displayName: Run formatter
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+      - script: cargo clippy -- -D warnings
+        displayName: Run linter
+
+      - script: cargo build
+        displayName: Build
