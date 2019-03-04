@@ -1,0 +1,34 @@
+# 使用するコンテナを列挙する
+resources:
+  containers:
+    - container: rust
+      image: rust:latest
+
+jobs:
+  - job: Linux
+    pool:
+      vmImage: 'ubuntu-16.04'
+    strategy:
+      matrix:
+        stable:
+          rust_toolchain: stable
+        beta:
+          rust_toolchain: beta
+
+    steps:
+      - script: |
+          curl -sSf https://sh.rustup.rs | sh -s -- --default-toolchain $RUST_TOOLCHAIN -y
+          echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
+          $HOME/.cargo/bin/rustup toolchain remove stable && $HOME/.cargo/bin/rustup toolchain add stable
+          $HOME/.cargo/bin/rustup component add rustfmt
+          $HOME/.cargo/bin/rustup component add clippy
+        displayName: Install rustup
+
+      - script: cargo fmt --all -- --check
+        displayName: Run formatter
+
+      - script: cargo clippy -- -D warnings
+        displayName: Run linter
+
+      - script: cargo build
+        displayName: Build
