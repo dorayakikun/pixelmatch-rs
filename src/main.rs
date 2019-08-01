@@ -4,6 +4,7 @@ mod pixelmatch;
 use clap::{App, Arg};
 use errors::{ErrorKind, PixelMatchError};
 use std::io::{self, Write};
+use image::GenericImageView;
 
 pub type Result<T> = ::std::result::Result<T, PixelMatchError>;
 
@@ -43,7 +44,7 @@ fn run() -> Result<()> {
     let img1 = image::open(before)?;
     let img2 = image::open(after)?;
 
-    let mut out = image::ImageBuffer::new(256, 256);
+    let mut out = image::ImageBuffer::new(img1.width(), img1.height());
 
     let diff = pixelmatch::match_pixel(&img1, &img2, &mut out, threshold, is_include_aa)?;
 
