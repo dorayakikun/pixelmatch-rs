@@ -21,15 +21,15 @@ fn rgb2q(r: u8, g: u8, b: u8) -> f64 {
 }
 
 fn color_delta(pixel1: Rgba<u8>, pixel2: Rgba<u8>, y_only: bool) -> f64 {
-    let mut r1 = pixel1.data[0];
-    let mut g1 = pixel1.data[1];
-    let mut b1 = pixel1.data[2];
-    let a1 = pixel1.data[3];
+    let mut r1 = pixel1[0];
+    let mut g1 = pixel1[1];
+    let mut b1 = pixel1[2];
+    let a1 = pixel1[3];
 
-    let mut r2 = pixel2.data[0];
-    let mut g2 = pixel2.data[1];
-    let mut b2 = pixel2.data[2];
-    let a2 = pixel2.data[3];
+    let mut r2 = pixel2[0];
+    let mut g2 = pixel2[1];
+    let mut b2 = pixel2[2];
+    let a2 = pixel2[3];
 
     if r1 == r2 && g1 == g2 && b1 == b2 && a1 == a2 {
         return 0.;
@@ -123,7 +123,7 @@ fn has_many_siblings(img: &ImageBuffer<Rgba<u8>, Vec<u8>>, x: u32, y: u32) -> bo
         return false;
     }
 
-    let [r, g, b, a] = img.get_pixel(x, y).data;
+    let [r, g, b, a] = img.get_pixel(x, y).0;
     let mut zeroes: u32 = 0;
     for dx in -1i32..=1 {
         for dy in -1i32..=1 {
@@ -133,7 +133,7 @@ fn has_many_siblings(img: &ImageBuffer<Rgba<u8>, Vec<u8>>, x: u32, y: u32) -> bo
             }
             let nx = x as i32 + dx;
             let ny = y as i32 + dy;
-            let [nr, ng, nb, na] = img.get_pixel(nx as u32, ny as u32).data;
+            let [nr, ng, nb, na] = img.get_pixel(nx as u32, ny as u32).0;
             if r == nr && g == ng && b == nb && a == na {
                 zeroes += 1;
                 if zeroes > 2 {
@@ -146,19 +146,13 @@ fn has_many_siblings(img: &ImageBuffer<Rgba<u8>, Vec<u8>>, x: u32, y: u32) -> bo
 }
 
 fn draw_pixel(out: &mut ImageBuffer<Rgba<u8>, Vec<u8>>, x: u32, y: u32, r: u8, g: u8, b: u8) {
-    out.put_pixel(
-        x,
-        y,
-        Rgba {
-            data: [r, g, b, 255],
-        },
-    )
+    out.put_pixel(x, y, Rgba([r, g, b, 255]))
 }
 
 fn gray_pixel(pixel: Rgba<u8>, alpha: f64) -> u8 {
     blend(
-        rgb2y(pixel.data[0], pixel.data[1], pixel.data[2]) as u8,
-        alpha * f64::from(pixel.data[3]) / 255.,
+        rgb2y(pixel[0], pixel[1], pixel[2]) as u8,
+        alpha * f64::from(pixel[3]) / 255.,
     )
 }
 
