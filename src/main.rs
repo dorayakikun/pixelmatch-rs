@@ -3,8 +3,8 @@ mod pixelmatch;
 
 use clap::{App, Arg};
 use errors::{ErrorKind, PixelMatchError};
-use std::io::{self, Write};
 use image::GenericImageView;
+use std::io::{self, Write};
 
 pub type Result<T> = ::std::result::Result<T, PixelMatchError>;
 
