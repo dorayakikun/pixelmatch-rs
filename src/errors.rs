@@ -23,7 +23,7 @@ pub enum ErrorKind {
 }
 
 impl Fail for PixelMatchError {
-    fn cause(&self) -> Option<&Fail> {
+    fn cause(&self) -> Option<&dyn Fail> {
         self.inner.cause()
     }
 
