@@ -1,6 +1,6 @@
 # pixelmatch-rs
 
-[![Build Status](https://dev.azure.com/dorayakikun/OSS/_apis/build/status/dorayakikun.pixelmatch-rs?branchName=master)](https://dev.azure.com/dorayakikun/OSS/_build/latest?definitionId=1&branchName=master)
+[![Action Status](https://github.com/dorayakikun/pixelmatch-rs/workflows/Build/badge.svg)](https://github.com/dorayakikun/pixelmatch-rs/actions)
 
 Image diff tool. port of [mapbox/pixelmatch](https://github.com/mapbox/pixelmatch)
 
