@@ -1,4 +1,4 @@
-use crate::errors::{Error as PixelMatchError};
+use crate::errors::Error as PixelMatchError;
 use anyhow::Result;
 use image::DynamicImage;
 use image::GenericImageView;
@@ -165,7 +165,10 @@ pub fn match_pixel(
     include_aa: bool,
 ) -> Result<u32> {
     if img1.dimensions() != img2.dimensions() {
-        return Err(anyhow::Error::new(PixelMatchError::SizeUnmatch { before: img1.dimensions(), after: img2.dimensions() }));
+        return Err(anyhow::Error::new(PixelMatchError::SizeUnmatch {
+            before: img1.dimensions(),
+            after: img2.dimensions(),
+        }));
     }
     let max_delta = 35215. * threshold * threshold;
     let mut diff: u32 = 0;

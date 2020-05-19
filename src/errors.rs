@@ -1,7 +1,7 @@
-use thiserror::Error;
 use image::ImageError;
 use std::io::Error as IOError;
 use std::num::ParseFloatError;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Error {

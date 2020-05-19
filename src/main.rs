@@ -60,7 +60,7 @@ fn run() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn main() -> anyhow::Result<()>{
+fn main() -> anyhow::Result<()> {
     run()?;
     Ok(())
 }
