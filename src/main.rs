@@ -2,13 +2,10 @@ mod errors;
 mod pixelmatch;
 
 use clap::{App, Arg};
-use errors::{ErrorKind, PixelMatchError};
 use image::GenericImageView;
 use std::io::{self, Write};
 
-pub type Result<T> = ::std::result::Result<T, PixelMatchError>;
-
-fn run() -> Result<()> {
+fn run() -> anyhow::Result<()> {
     let matches = App::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
         .about("pixelmatch")
@@ -63,28 +60,7 @@ fn run() -> Result<()> {
     Ok(())
 }
 
-fn main() {
-    if let Err(e) = run() {
-        let message = e.to_string();
-
-        io::stderr()
-            .write_all(&format!("caused: {}", message).into_bytes())
-            .unwrap();
-
-        match e.kind() {
-            ErrorKind::IOError => {
-                std::process::exit(1);
-            }
-            ErrorKind::InvalidImageFile => {
-                std::process::exit(1);
-            }
-            ErrorKind::ParseFloatError => {
-                std::process::exit(2);
-            }
-            ErrorKind::SizeUnmatch => {
-                std::process::exit(2);
-            }
-        }
-    }
-    std::process::exit(0);
+fn main() -> anyhow::Result<()> {
+    run()?;
+    Ok(())
 }
