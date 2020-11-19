@@ -173,8 +173,8 @@ pub fn match_pixel(
     let max_delta = 35215. * threshold * threshold;
     let mut diff: u32 = 0;
 
-    let img1 = img1.to_rgba();
-    let img2 = img2.to_rgba();
+    let img1 = img1.to_rgba8();
+    let img2 = img2.to_rgba8();
 
     for (x, y, pixel1) in img1.enumerate_pixels() {
         let delta = color_delta(*pixel1, *img2.get_pixel(x, y), false);
