@@ -15,7 +15,7 @@ pub enum Error {
         after: (u32, u32),
     },
     #[error("Failed to save diff image")]
-    IOError,
+    IoError,
 }
 
 impl From<ParseFloatError> for Error {
@@ -32,6 +32,6 @@ impl From<ImageError> for Error {
 
 impl From<IOError> for Error {
     fn from(_error: IOError) -> Self {
-        Error::IOError
+        Error::IoError
     }
 }
