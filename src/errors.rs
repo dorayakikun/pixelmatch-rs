@@ -6,7 +6,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Is not number")]
-    ParseFloatError,
+    ParseFloat,
     #[error("Failed to open image file. caused by {0}")]
     InvalidImageFile(String),
     #[error("Image sizes does not match. before: {before:?} after: {after:?}")]
@@ -15,12 +15,12 @@ pub enum Error {
         after: (u32, u32),
     },
     #[error("Failed to save diff image")]
-    IoError,
+    Io,
 }
 
 impl From<ParseFloatError> for Error {
     fn from(_error: ParseFloatError) -> Self {
-        Error::ParseFloatError
+        Error::ParseFloat
     }
 }
 
@@ -32,6 +32,6 @@ impl From<ImageError> for Error {
 
 impl From<IOError> for Error {
     fn from(_error: IOError) -> Self {
-        Error::IoError
+        Error::Io
     }
 }
