@@ -10,27 +10,27 @@ fn run() -> anyhow::Result<()> {
         .version(env!("CARGO_PKG_VERSION"))
         .about("pixelmatch")
         .arg(
-            Arg::with_name("threshold")
+            Arg::new("threshold")
                 .help("threshold")
                 .long("threshold")
                 .default_value("0.1")
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("aa")
+            Arg::new("aa")
                 .help("is include antialiased")
                 .long("include-antialiased"),
         )
         .arg(
-            Arg::with_name("dest")
+            Arg::new("dest")
                 .help("destination path")
-                .short("d")
+                .short('d')
                 .long("dest")
                 .default_value("-")
                 .takes_value(true),
         )
-        .arg(Arg::with_name("before").index(1).required(true))
-        .arg(Arg::with_name("after").index(2).required(true))
+        .arg(Arg::new("before").index(1).required(true))
+        .arg(Arg::new("after").index(2).required(true))
         .get_matches();
 
     let threshold: f64 = matches.value_of("threshold").unwrap().parse()?;
