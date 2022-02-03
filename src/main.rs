@@ -2,7 +2,6 @@ mod errors;
 mod pixelmatch;
 
 use clap::{App, Arg};
-use image::GenericImageView;
 use std::io::{self, Write};
 
 fn run() -> anyhow::Result<()> {
