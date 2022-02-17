@@ -1,11 +1,11 @@
 mod errors;
 mod pixelmatch;
 
-use clap::{App, Arg};
+use clap::{Arg, Command};
 use std::io::{self, Write};
 
 fn run() -> anyhow::Result<()> {
-    let matches = App::new(env!("CARGO_PKG_NAME"))
+    let matches = Command::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
         .about("pixelmatch")
         .arg(
