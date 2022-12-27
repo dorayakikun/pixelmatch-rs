@@ -18,7 +18,7 @@ pub fn run() -> anyhow::Result<()> {
                 .help("threshold")
                 .long("threshold")
                 .default_value("0.1")
-                .value_parser(clap::value_parser!(f64))
+                .value_parser(clap::value_parser!(f64)),
         )
         .arg(
             Arg::new("aa")
