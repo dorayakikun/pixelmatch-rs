@@ -2,7 +2,7 @@ mod errors;
 
 use crate::errors::Error as PixelMatchError;
 use anyhow::Result;
-use clap::{Arg, Command};
+use clap::{Arg, ArgAction, Command};
 use image::DynamicImage;
 use image::GenericImageView;
 use image::ImageBuffer;
@@ -18,30 +18,30 @@ pub fn run() -> anyhow::Result<()> {
                 .help("threshold")
                 .long("threshold")
                 .default_value("0.1")
-                .takes_value(true),
+                .value_parser(clap::value_parser!(f64))
         )
         .arg(
             Arg::new("aa")
                 .help("is include antialiased")
-                .long("include-antialiased"),
+                .long("include-antialiased")
+                .action(ArgAction::SetTrue),
         )
         .arg(
             Arg::new("dest")
                 .help("destination path")
                 .short('d')
                 .long("dest")
-                .default_value("-")
-                .takes_value(true),
+                .default_value("-"),
         )
         .arg(Arg::new("before").index(1).required(true))
         .arg(Arg::new("after").index(2).required(true))
         .get_matches();
 
-    let threshold: f64 = matches.value_of("threshold").unwrap().parse()?;
-    let is_include_aa = matches.is_present("aa");
+    let threshold = matches.get_one::<f64>("threshold").unwrap().to_owned();
+    let is_include_aa = matches.get_flag("aa");
 
-    let before = matches.value_of("before").unwrap();
-    let after = matches.value_of("after").unwrap();
+    let before = matches.get_one::<String>("before").unwrap();
+    let after = matches.get_one::<String>("after").unwrap();
     let img1 = image::open(before)?;
     let img2 = image::open(after)?;
 
@@ -49,8 +49,8 @@ pub fn run() -> anyhow::Result<()> {
 
     let diff = match_pixel(&img1, &img2, &mut out, threshold, is_include_aa)?;
 
-    if let Some(dest) = matches.value_of("dest") {
-        match dest {
+    if let Some(dest) = matches.get_one::<String>("dest") {
+        match dest.as_str() {
             "-" => {
                 io::stdout()
                     .write_all(&format!("diff: {}", diff).into_bytes())
